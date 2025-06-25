@@ -510,7 +510,7 @@ def analysis(
                 variant_caller	->	optional parameter that informs the tool of what format the VAF scores are provided (boolean; default=None). This is required when subClassify=True. Currently, there are four supported formats:
                                 -> caveman: If your VAF is recorded in the 11th column of your VCF as the last number of the colon delimited values, set variant_caller="caveman".
                                 -> standard: If your VAF is recorded in the 8th or 10th column of your VCF as VAF=xx or AF=xx, set variant_caller="standard".
-                                -> mutect2: If your VAF is recorded in the 11th column of your VCF as AF=xx, set variant_caller="mutect2".
+                                -> mutect2: If your VAF is recorded in the 10th or 11th column of your VCF as AF=xx, set variant_caller="mutect2".
                includedVAFs ->  optional parameter that informs the tool of the inclusion of VAFs in the dataset (boolean; default=True)
                      windowSize	->	the size of the window used for correcting the IMDs based upon mutational density within a given genomic range (integer; default=10000000)
               plotIMDfigure	->	optional parameter that generates IMD and mutational spectra plots for each sample (boolean; default=True).

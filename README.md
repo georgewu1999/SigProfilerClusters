@@ -55,32 +55,46 @@ See below for a detailed list of available parameters
 
 4. The partitioned vcf files are placed under [project_path]/ouput/clustered/ and  [project_path]/ouput/nonClustered/. You can visualize the results by looking at the IMD plots available under [project_path]/ouput/plots/.
 
+
 **AVAILABLE PARAMETERS**
 
-	Required:
-            project:			[string] Unique name for the given project.
-            genome:			[string] Reference genome to use. Must be installed using SigProfilerMatrixGenerator.
-            contexts:			[string] Contexts needs to be one of the following {“96”, “ID”}.
-            simContext: 		[list of strings] Mutations context that was used for generating the background model (e.g ["6144"] or ["96"]).
-            input_path:			[string] Path to the given project. Please add a backslash(/) at the end of the input path. For example: "path/to/the/input_file/".
-    
-    	Optional:
-            analysis:	 		[string] Desired analysis pipeline. By default output_type='all'. Other options include "subClassify" and "hotspot". 
-            sortSims:			[boolean] Option to sort the simulated files if they have already been sorted. By default sortSims=True to ensure accurate results. The files must be sorted for accurate results. 
-            interdistance:			[string] The mutation types to calculate IMDs between - Use only when performing analysis of indels (default='ID').
-            calculateIMD:		[boolean] Parameter to calculate the IMDs. This will save time if you need to rerun the subclassification step only (default=True).
-            max_cpu:			[integer] Change the number of allocated CPUs. By default all CPUs are used.
-            subClassify:		[boolean] Subclassify the clustered mutations. Requires that VAF scores are available in TCGA or Sanger format. By default subClassify=False. See VAF Format below for more details. 
-            plotIMDfigure:	[boolean] Parameter that generates IMD and mutational spectra plots for each sample (default=True).
-            plotRainfall		[boolean] Parameter that generates rainfall plots for each sample using the subclassification of clustered events (default=True).
-            
-            The following parameters are used if the subClassify argument is True:
-            includedVAFs:	[boolean] Parameter that informs the tool of the inclusion of VAFs in the dataset (default=True).
-            includedCCFs:   [boolean] Parameter that informs the tool of the inclusion of CCFs in the dataset (default=True). If CCFs are used, set includedVAFs=False.
-            variant_caller: [string] Parameter that informs the tool of what format the VAF scores are provided (default='standard').
-            windowSize:		[integer] Window size for calculating mutation density in the rainfall plots. By default windowSize=10000000.
-            correction		[boolean] Optional parameter to perform a genome-wide mutational density correction (boolean; default=False).
-            probability     [boolean] Optional parameter to calculate the probability of observing each clustered event within the localized region of the genome. These values are saved into the [project_path]/output/clustered/ directories. See OSF wiki page for more details.
+### Required Parameters
+
+| Parameter     | Variable Type      | Description |
+|--------------|--------------------|-------------|
+| `project`     | String              | Unique name for the given project. |
+| `genome`      | String              | Reference genome to use. Must be installed using SigProfilerMatrixGenerator. |
+| `contexts`    | String              | Contexts needs to be one of the following: `"96"`, `"ID"`. |
+| `simContext`  | List of Strings     | Mutation context used for generating the background model (e.g., `["6144"]` or `["96"]`). |
+| `input_path`  | String              | Path to the input files. Must end with a `/`, e.g., `"path/to/the/input_file/"`. |
+
+---
+
+### Optional Parameters
+
+| Parameter       | Variable Type | Description |
+|----------------|----------------|-------------|
+| `analysis`       | String        | Desired analysis pipeline. Options include `"all"` (default), `"subClassify"`, and `"hotspot"`. |
+| `sortSims`       | Boolean       | Option to sort simulated files. Ensures accuracy. Default: `True`. |
+| `interdistance`  | String        | Mutation types to calculate IMDs between. Use only for indel analysis. Default: `"ID"`. |
+| `calculateIMD`   | Boolean       | Whether to calculate IMDs. Useful for rerunning subclassification only. Default: `True`. |
+| `max_cpu`        | Integer       | Number of CPUs to use. Default: all available CPUs. |
+| `subClassify`    | Boolean       | Subclassify clustered mutations (requires VAF scores in TCGA/Sanger format). Default: `False`. |
+| `plotIMDfigure`  | Boolean       | Generate IMD and mutational spectra plots for each sample. Default: `True`. |
+| `plotRainfall`   | Boolean       | Generate rainfall plots using subclassified clustered events. Default: `True`. |
+
+---
+
+### Parameters Used if `subClassify=True`
+
+| Parameter        | Variable Type | Description |
+|------------------|---------------|-------------|
+| `includedVAFs`    | Boolean       | Indicates VAFs are included in the dataset. Default: `True`. |
+| `includedCCFs`    | Boolean       | Indicates CCFs are included. If `True`, set `includedVAFs=False`. Default: `True`. |
+| `variant_caller`  | String        | Format of VAF scores (e.g., `"standard"`). Default: `"standard"`. |
+| `windowSize`      | Integer       | Window size for calculating mutation density in rainfall plots. Default: `10000000`. |
+| `correction`      | Boolean       | Perform genome-wide mutational density correction. Default: `False`. |
+| `probability`     | Boolean       | Calculate the probability of observing each clustered event in its local region. Output saved in `[project_path]/output/clustered/`. Default: `False`. |
 
 
 **VAF Format**
@@ -93,7 +107,7 @@ If your VAF is recorded in the 11th column of your VCF as the last number of the
 
 If your VAF is recorded in the 8th or 10th column of your VCF as VAF=xx or AF=xx, set variant_caller="standard".
 
-If your VAF is recorded in the 11th column of your VCF as AF=xx, set variant_caller="mutect2".
+If your VAF is recorded in the 10th or 11th column of your VCF as AF=xx, set variant_caller="mutect2".
 
 If your VCFs have no recorded VAFs set includedVAFs=False. This will run SigProfilerClusters, subclassify clusters based on just the calculated IMD (provided that you set subclassify=True).
 
