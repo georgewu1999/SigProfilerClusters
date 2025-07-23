@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.2.2] - 2025-07-21
+
+### Added
+- Integrated `pytest` to ensure correct handling of the `variant_caller` parameter.
+
+### Changed
+- Update the standard names for the `variant_caller` parameter
+  - Changed `sanger` to `caveman`
+  - `TCGA` and `standardVC` have been merged into a more flexible `standard` option.
+  - `standard` is now default and parses VAF from 8th and 10th columns of VCF files (`VAF=` or `AF=`).
+
+### Fixed
+- Plotting Stability: Added error handling to skip samples that are invalid and proceed with valid ones.
+- Resolved a potential index out-of-bounds error in the `plot_hist` function.
+
 ## [1.2.1] - 2025-04-02
 
 ### Changed

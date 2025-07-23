@@ -17,7 +17,7 @@ def readme():
     # 	return(f.read())
 
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 
 def write_version_py(filename="SigProfilerClusters/version.py"):
@@ -26,7 +26,7 @@ def write_version_py(filename="SigProfilerClusters/version.py"):
 # THIS FILE IS GENERATED FROM SIGPROFILECLUSTERS SETUP.PY
 short_version = '%(version)s'
 version = '%(version)s'
-Update = 'v1.2.1: Add centromere coordinates for mm39'
+Update = 'v1.2.2: Updates to variant_caller parameter and plotting improvements'
 	
 	"""
     fh = open(filename, "w")
