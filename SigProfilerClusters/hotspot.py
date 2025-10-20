@@ -19,7 +19,7 @@ import warnings
 from statistics import median
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 import time
-from . import plottingFunctions
+import plottingFunctions
 import pickle
 import bisect
 from scipy.signal import find_peaks
@@ -1401,6 +1401,7 @@ def hotSpotAnalysis(
     ################################################################
     # Organize path suffixes, paths, and several plotting parameters
     ################################################################
+    print("this is hotspot analysis")
     path_suffix = ""
     if correction:
         path_suffix = "_corrected"

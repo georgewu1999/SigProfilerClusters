@@ -6,8 +6,9 @@ from SigProfilerMatrixGenerator.scripts import (
     convert_input_to_simple_files as convertIn,
 )
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
-from . import hotspot
-from . import classifyFunctions
+import hotspot
+# from . import hotspot
+# from . import classifyFunctions
 import SigProfilerMatrixGenerator as sig
 import matplotlib as plt
 import sigProfilerPlotting as sigPlt
@@ -19,12 +20,14 @@ import statistics
 import scipy
 import time
 import sys
+import classifyFunctions
+import plottingFunctions
 
 # from SigProfilerExtractor import sigpro as sigs
 import multiprocessing as mp
-from . import plottingFunctions
+# from . import plottingFunctions
 from SigProfilerMatrixGenerator.scripts import MutationMatrixGenerator as matRef
-from . import convertToVCF
+# from . import convertToVCF
 import random
 import pandas as pd
 import bisect
@@ -616,6 +619,9 @@ def eventProbability(
                 os.remove(subclassPath)
                 out.close()
 
+def foo():
+    print("foo")
+
 
 def analysis(
     project,
@@ -690,6 +696,7 @@ def analysis(
             subClassify=True. Note that the IMD plots do not have the resolution to show the corrected IMDs if correction=True. The corrected mutations are shown in the SBS96, but the
             distances are not used in the histogram.
     """
+
     if includedCCFs:
         includedVAFs = False
 
@@ -990,461 +997,470 @@ def analysis(
         + str(time_stamp)
         + ".err"
     )
+
     if os.path.exists(error_file):
         os.remove(error_file)
     if os.path.exists(log_file):
         os.remove(log_file)
     sys.stderr = open(error_file, "w")
-    log_out = open(log_file, "w")
-    log_out.write("THIS FILE CONTAINS THE METADATA ABOUT SYSTEM AND RUNTIME\n\n\n")
-    log_out.write("-------System Info-------\n")
-    log_out.write(
-        "Operating System Name: "
-        + platform.uname()[0]
-        + "\n"
-        + "Nodename: "
-        + platform.uname()[1]
-        + "\n"
-        + "Release: "
-        + platform.uname()[2]
-        + "\n"
-        + "Version: "
-        + platform.uname()[3]
-        + "\n"
-    )
-    log_out.write("\n-------Python and Package Versions------- \n")
-    log_out.write(
-        "Python Version: "
-        + str(platform.sys.version_info.major)
-        + "."
-        + str(platform.sys.version_info.minor)
-        + "."
-        + str(platform.sys.version_info.micro)
-        + "\n"
-    )
-    log_out.write("SigProfilerMatrixGenerator Version: " + sig.__version__ + "\n")
-    log_out.write("SigProfilerPlotting version: " + sigPlt.__version__ + "\n")
-    log_out.write("matplotlib version: " + plt.__version__ + "\n")
-    log_out.write("scipy version: " + scipy.__version__ + "\n")
-    log_out.write("numpy version: " + np.__version__ + "\n")
+    try:
 
-    log_out.write("\n-------Vital Parameters Used for the execution -------\n")
-    log_out.write(
-        "Project: {}\nGenome: {}\nContext: {}\ninterdistance: {}\ninput_path: {}\noutput_type: {}\n".format(
-            project, genome, simContext, interdistance, ref_dir, output_type
+
+        log_out = open(log_file, "w")
+        log_out.write("THIS FILE CONTAINS THE METADATA ABOUT SYSTEM AND RUNTIME\n\n\n")
+        log_out.write("-------System Info-------\n")
+        log_out.write(
+            "Operating System Name: "
+            + platform.uname()[0]
+            + "\n"
+            + "Nodename: "
+            + platform.uname()[1]
+            + "\n"
+            + "Release: "
+            + platform.uname()[2]
+            + "\n"
+            + "Version: "
+            + platform.uname()[3]
+            + "\n"
         )
-    )
-    log_out.write("\n-------Date and Time Data------- \n")
-    tic = datetime.datetime.now()
-    log_out.write(
-        "Date and Clock time when the execution started: " + str(tic) + "\n\n\n"
-    )
-    log_out.write("-------Runtime Checkpoints------- \n")
-    log_out.close()
+        log_out.write("\n-------Python and Package Versions------- \n")
+        log_out.write(
+            "Python Version: "
+            + str(platform.sys.version_info.major)
+            + "."
+            + str(platform.sys.version_info.minor)
+            + "."
+            + str(platform.sys.version_info.micro)
+            + "\n"
+        )
+        log_out.write("SigProfilerMatrixGenerator Version: " + sig.__version__ + "\n")
+        log_out.write("SigProfilerPlotting version: " + sigPlt.__version__ + "\n")
+        log_out.write("matplotlib version: " + plt.__version__ + "\n")
+        log_out.write("scipy version: " + scipy.__version__ + "\n")
+        log_out.write("numpy version: " + np.__version__ + "\n")
 
-    print("\n\n======================================", flush=True)
-    print("Beginning SigProfilerClusters Analysis", flush=True)
-    print("======================================\n\n", flush=True)
-    # Log files are done begin created and the majority of the folder structures are set
+        log_out.write("\n-------Vital Parameters Used for the execution -------\n")
+        log_out.write(
+            "Project: {}\nGenome: {}\nContext: {}\ninterdistance: {}\ninput_path: {}\noutput_type: {}\n".format(
+                project, genome, simContext, interdistance, ref_dir, output_type
+            )
+        )
+        log_out.write("\n-------Date and Time Data------- \n")
+        tic = datetime.datetime.now()
+        log_out.write(
+            "Date and Clock time when the execution started: " + str(tic) + "\n\n\n"
+        )
+        log_out.write("-------Runtime Checkpoints------- \n")
+        log_out.close()
 
-    ############################################
-    # Begin analysis ###########################
-    ############################################
-    start = time.time()
-    context_ref = None
-    # Only one type of analysis is specified
-    if len(simContext) == 1:
-        if simContext[0] == "INDEL" or simContext[0] == "ID":
-            context_ref = "INDEL"
-        else:
-            context_ref = "SNV"
 
-        original_vcf_path = ref_dir + "input/"
-        vcf_files = os.listdir(original_vcf_path)
-        vcf_path = original_vcf_path
+        print("\n\n======================================", flush=True)
+        print("Beginning SigProfilerClusters Analysis", flush=True)
+        print("======================================\n\n", flush=True)
+        # Log files are done begin created and the majority of the folder structures are set
 
-        if ".DS_Store" in vcf_files:  # Remove hidden macOS files
-            vcf_files.remove(".DS_Store")
-        file_name = vcf_files[0].split(".")
-        file_extension = file_name[-1]
-
-        # Convert original input files (VCF-like files) into chromosome-based files based upon the input file format.
-        # Calls upon a script used in the matrixGenerator
-        if file_extension == "genome":
-            convertIn.convertTxt(project, vcf_path, genome, output_path)
-        else:
-            if file_extension == "txt":
-                snv, indel, skipped, samples = convertIn.convertTxt(
-                    project, vcf_path, genome, output_path, ncbi_chrom, log_file
-                )
-            elif file_extension == "vcf":
-                snv, indel, skipped, samples = convertIn.convertVCF(
-                    project, vcf_path, genome, output_path, ncbi_chrom, log_file
-                )
-            elif file_extension == "maf":
-                snv, indel, skipped, samples = convertIn.convertMAF(
-                    project, vcf_path, genome, output_path, ncbi_chrom, log_file
-                )
-            elif file_extension == "tsv":
-                snv, indel, skipped, samples = convertIn.convertICGC(
-                    project, vcf_path, genome, output_path, ncbi_chrom, log_file
-                )
+        ############################################
+        # Begin analysis ###########################
+        ############################################
+        start = time.time()
+        context_ref = None
+        # Only one type of analysis is specified
+        if len(simContext) == 1:
+            if simContext[0] == "INDEL" or simContext[0] == "ID":
+                context_ref = "INDEL"
             else:
-                print("File format not supported")
+                context_ref = "SNV"
 
-    # More than one type of analysis is specified. Currently no longer supported
-    else:
-        print("Please only provide one type of context for analysis")
-        sys.exit()
+            original_vcf_path = ref_dir + "input/"
+            vcf_files = os.listdir(original_vcf_path)
+            vcf_path = original_vcf_path
 
-    # Organize additional paths/files and corresponding suffixes
-    file_context2 = inter_label
-    if exome:
-        file_context += "_exome"
-        file_context2 += "_exome"
-    output_path = (
-        ref_dir
-        + "output/simulations/"
-        + project
-        + "_intradistance_"
-        + genome
-        + "_"
-        + file_context2
-        + "/"
-    )
-    simulation_path_sorted = None
-    original_samples = (
-        ref_dir + "output/vcf_files" + path_suffix + "/single/" + context_ref + "/"
-    )
-    if sortSims:
-        simulation_path = (
+            if ".DS_Store" in vcf_files:  # Remove hidden macOS files
+                vcf_files.remove(".DS_Store")
+            file_name = vcf_files[0].split(".")
+            file_extension = file_name[-1]
+
+            # Convert original input files (VCF-like files) into chromosome-based files based upon the input file format.
+            # Calls upon a script used in the matrixGenerator
+            if file_extension == "genome":
+                convertIn.convertTxt(project, vcf_path, genome, output_path)
+            else:
+                if file_extension == "txt":
+                    snv, indel, skipped, samples = convertIn.convertTxt(
+                        project, vcf_path, genome, output_path, ncbi_chrom, log_file
+                    )
+                elif file_extension == "vcf":
+                    snv, indel, skipped, samples = convertIn.convertVCF(
+                        project, vcf_path, genome, output_path, ncbi_chrom, log_file
+                    )
+                elif file_extension == "maf":
+                    snv, indel, skipped, samples = convertIn.convertMAF(
+                        project, vcf_path, genome, output_path, ncbi_chrom, log_file
+                    )
+                elif file_extension == "tsv":
+                    snv, indel, skipped, samples = convertIn.convertICGC(
+                        project, vcf_path, genome, output_path, ncbi_chrom, log_file
+                    )
+                else:
+                    print("File format not supported")
+
+        # More than one type of analysis is specified. Currently no longer supported
+        else:
+            print("Please only provide one type of context for analysis")
+            sys.exit()
+
+        # Organize additional paths/files and corresponding suffixes
+        file_context2 = inter_label
+        if exome:
+            file_context += "_exome"
+            file_context2 += "_exome"
+        output_path = (
             ref_dir
             + "output/simulations/"
             + project
-            + "_simulations_"
+            + "_intradistance_"
             + genome
             + "_"
-            + file_context
+            + file_context2
             + "/"
         )
-        simulation_path_sorted = (
-            ref_dir
-            + "output/simulations/"
-            + project
-            + "_simulations_"
-            + genome
-            + "_"
-            + file_context
-            + "_sorted/"
+        simulation_path_sorted = None
+        original_samples = (
+            ref_dir + "output/vcf_files" + path_suffix + "/single/" + context_ref + "/"
         )
-        if os.path.exists(simulation_path_sorted):
-            shutil.rmtree(simulation_path_sorted)
-        os.makedirs(simulation_path_sorted)
-    else:
-        simulation_path = (
-            ref_dir
-            + "output/simulations/"
-            + project
-            + "_simulations_"
-            + genome
-            + "_"
-            + file_context
-            + "_sorted/"
-        )
-    output_path_original = (
-        ref_dir
-        + "output/simulations/"
-        + project
-        + "_intradistance_original_"
-        + genome
-        + "_"
-        + file_context2
-        + "/"
-    )
-
-    # Checks for simulated data. If there are not simulations, then inform the user to generate simulations first before
-    # performing the clusters analysis:
-    if not os.path.exists(simulation_path):
-        print(
-            "There are no simulated data present for this project. Please generate simulations before running SigProfilerClusters.\n"
-            "\tThe package can be installed via pip:\n\t\t\t$ pip install SigProfilerSimulator\n"
-            "\n\tand used within a python3 sessions as follows:\n\t\t\t$ python3\n\t\t\t>> from SigProfilerSimulator import SigProfilerSimulator as sigSim\n"
-            "\t\t\t>> sigSim.SigProfilerSimulator(project, project_path, genome, contexts=['6144'], simulations=100)\n\n"
-            "\tFor a complete list of parameters, visit the github repo (https://github.com/AlexandrovLab/SigProfilerSimulator) or the documentation page (https://osf.io/usxjz/wiki/home/)"
-        )
-        sys.exit()
-    if len(os.listdir(simulation_path)) < 100:
-        print(
-            "Please simulate a minimum of 100 simulations per sample to successfully run SigProfilerClusters."
-        )
-        sys.exit()
-
-    # Collect simulation files and distribute them into the available processors for parallelization
-    simulations = os.listdir(simulation_path)
-    if ".DS_Store" in simulations:
-        simulations.remove(".DS_Store")
-
-    # Assign max_seed as all available or user-provided number of processors for parallelization
-    if max_cpu:
-        processors = max_cpu
-    else:
-        processors = mp.cpu_count()
-    max_seed = processors
-
-    # Calculate the mutational distances for the original samples (distance_one_file())
-    # and for the simulated samples (distance_multiple_files_sims()). These series of if/else
-    # statements were originally used to analyze simulations or original data separately, however,
-    # we always analyze both at consecutively. The only relevant section is now output_type=='all'.
-    # If output_type=='hotspot' or output_type=='subClassify', this portion of code is skipped, which
-    # saves time if the downstream analysis needs to be rerun.
-    if output_type != None:
-        print("Calculating mutational distances...", end="", flush=True)
-    if output_type == "original":
-        distance_one_file(
-            original_samples, output_path_original, file_context2, genome, centromeres
-        )
-
-    elif output_type == "all":
-        # Remove old path iterations if they exist
-        if os.path.exists(output_path):
-            shutil.rmtree(output_path)
-        os.makedirs(output_path)
-
-        # Calculate distances for the original samples
-        # Parallelize and calculate distances for the simulated samples
-        # Organize the output paths (ie remove if they exist, and then create and emtpy folder)
-        if os.path.exists(output_path_original):
-            shutil.rmtree(output_path_original)
-            os.makedirs(output_path_original)
+        if sortSims:
+            simulation_path = (
+                ref_dir
+                + "output/simulations/"
+                + project
+                + "_simulations_"
+                + genome
+                + "_"
+                + file_context
+                + "/"
+            )
+            simulation_path_sorted = (
+                ref_dir
+                + "output/simulations/"
+                + project
+                + "_simulations_"
+                + genome
+                + "_"
+                + file_context
+                + "_sorted/"
+            )
+            if os.path.exists(simulation_path_sorted):
+                shutil.rmtree(simulation_path_sorted)
+            os.makedirs(simulation_path_sorted)
         else:
-            os.makedirs(output_path_original)
-        original_samples_length = os.listdir(original_samples)
-        if processors > len(original_samples_length):
-            max_seed = len(original_samples_length)
-        pool = mp.Pool(max_seed)
-        # pool_break = len(simulations)/max_seed
-        samples_parallel = [[] for i in range(max_seed)]
-        pool_bin = 0
-        for chromFile in original_samples_length:
-            if pool_bin == max_seed:
-                pool_bin = 0
-            samples_parallel[pool_bin].append(chromFile)
-            pool_bin += 1
-        results = []
-        for i in range(0, len(samples_parallel), 1):
-            r = pool.apply_async(
-                distance_one_file,
-                args=(
-                    samples_parallel[i],
-                    original_samples,
-                    output_path_original,
-                    file_context2,
-                    genome,
-                    centromeres,
-                ),
+            simulation_path = (
+                ref_dir
+                + "output/simulations/"
+                + project
+                + "_simulations_"
+                + genome
+                + "_"
+                + file_context
+                + "_sorted/"
             )
-            results.append(r)
-        pool.close()
-        pool.join()
-        for r in results:
-            r.wait()
-            if not r.successful():
-                # Raises an error when not successful
-                r.get()
-
-        # Parallelize and calculate distances for the simulated samples
-        if processors > len(simulations):
-            max_seed = len(simulations)
-        pool = mp.Pool(max_seed)
-        # sim_break = len(simulations)/max_seed
-        simulations_parallel = [[] for i in range(max_seed)]
-        sim_bin = 0
-        for sim in simulations:
-            if sim_bin == max_seed:
-                sim_bin = 0
-            simulations_parallel[sim_bin].append(sim)
-            sim_bin += 1
-        results = []
-        for i in range(0, len(simulations_parallel), 1):
-            r = pool.apply_async(
-                distance_multiple_files_sims,
-                args=(
-                    output_path,
-                    simulations_parallel[i],
-                    simulation_path,
-                    simulation_path_sorted,
-                    file_context2,
-                    genome,
-                    centromeres,
-                    sortSims,
-                ),
-            )
-            results.append(r)
-        pool.close()
-        pool.join()
-        for r in results:
-            r.wait()
-            if not r.successful():
-                # Raises an error when not successful
-                r.get()
-
-    elif output_type == "simulations":
-        if os.path.exists(output_path):
-            shutil.rmtree(output_path)
-        distance_multiple_files_sims(
-            output_path,
-            simulation_path,
-            simulation_path_sorted,
-            file_context2,
-            genome,
-            centromeres,
-            sortSims,
+        output_path_original = (
+            ref_dir
+            + "output/simulations/"
+            + project
+            + "_intradistance_original_"
+            + genome
+            + "_"
+            + file_context2
+            + "/"
         )
-    # elif :
-    # 	print("Output type is not a valid option.")
-    # 	sys.exit()
-    if output_type != None:
-        print("Completed!", flush=True)  # IMD calculations have successfully completed.
-
-    # Begin the hotspot analysis. This function will also produce the IMD distribution and spectra plots
-    if analysis == "hotspot" or analysis == "all":
-        original = True
-        firstRun = True
-        signature = False
-        percentage = False
-        regions, imds = hotspot.hotSpotAnalysis(
-            project,
-            genome,
-            contexts,
-            simContext,
-            ref_dir,
-            windowSize,
-            processors,
-            plotIMDfigure,
-            exome,
-            chromLengths,
-            binsDensity,
-            original,
-            signature,
-            percentage,
-            firstRun,
-            clustering_vaf,
-            calculateIMD,
-            chrom_based,
-            correction,
-        )
-
-    # Allows for the clustered muutations to automactically run through the extraction.
-    # This option is not recommended, but rather the extractions should be run separately after
-    # the clustered analysis is completed.
-    # if extraction:
-    # 	print("Beginning signature extraction...")
-    # 	sigs.sigProfilerExtractor("table", ref_dir+"output/extraction_clustered/", ref_dir+"output/vcf_files" + path_suffix + "/"+project+"_clustered/SNV/output/SBS/"+project+"_clustered.SBS96.all", genome, startProcess=startProcess, endProcess=endProcess, totalIterations=totalIterations)#, totalIterations=totalIterations)
-
-    # Subclassify the clustered partition of mutations with the exception of indels. This function will also
-    # produce the rainfall plots.
-    if subClassify:
-        if contexts != "ID":
-            print("Beginning subclassification of clustered mutations...", end="")
-            if includedVAFs:
-                classifyFunctions.pullVaf(
-                    project, input_path, variant_caller, correction
-                )
-                sys.stderr.close()
-                sys.stderr = open(error_file, "a")
-                classifyFunctions.findClustersOfClusters(
-                    project,
-                    chrom_based,
-                    input_path,
-                    windowSize,
-                    chromLengths,
-                    regions,
-                    log_file,
-                    genome,
-                    processors,
-                    imds,
-                    correction,
-                    includedCCFs,
-                )
-                sys.stderr.close()
-            elif includedCCFs:
-                classifyFunctions.pullCCF(project, input_path, correction)
-                sys.stderr.close()
-                sys.stderr = open(error_file, "a")
-                classifyFunctions.findClustersOfClusters(
-                    project,
-                    chrom_based,
-                    input_path,
-                    windowSize,
-                    chromLengths,
-                    regions,
-                    log_file,
-                    genome,
-                    processors,
-                    imds,
-                    correction,
-                    includedCCFs,
-                )
-                sys.stderr.close()
-            else:
-                classifyFunctions.findClustersOfClusters_noVAF(
-                    project,
-                    chrom_based,
-                    input_path,
-                    windowSize,
-                    chromLengths,
-                    regions,
-                    log_file,
-                    genome,
-                    processors,
-                    imds,
-                    correction,
-                )
-                sys.stderr.close()
-            print("Completed!", flush=True)
-        sys.stderr = open(error_file, "a")
-
-        # Generate the rainfall plots.
-        if plotRainfall:
-            print("Generating a rainfall plot for all samples...", end="")
-            plottingFunctions.rainfall(
-                chrom_based,
-                project,
-                input_path,
-                chrom_path,
-                chromLengths,
-                centromeres,
-                contexts,
-                includedVAFs,
-                includedCCFs,
-                correction,
-                windowSize,
-                bedRanges,
-            )
-            print("done")
-            print("Subclassification of clustered mutations has finished!")
-
-        # Generates output paths for final results saved as VCF files
-        convertToVCF.generateAllPaths(input_path, contexts)
-        convertToVCF.convertFiles(input_path, contexts, project, correction)
-
-        # Add probability to all clustered mutations using same window sized-bins
-        if probability:
-            print("\n")
+        # Checks for simulated data. If there are not simulations, then inform the user to generate simulations first before
+        # performing the clusters analysis:
+        if not os.path.exists(simulation_path):
             print(
-                "Calculating the probability of observing each clustered event...",
-                end="",
-                flush=True,
+                "There are no simulated data present for this project. Please generate simulations before running SigProfilerClusters.\n"
+                "\tThe package can be installed via pip:\n\t\t\t$ pip install SigProfilerSimulator\n"
+                "\n\tand used within a python3 sessions as follows:\n\t\t\t$ python3\n\t\t\t>> from SigProfilerSimulator import SigProfilerSimulator as sigSim\n"
+                "\t\t\t>> sigSim.SigProfilerSimulator(project, project_path, genome, contexts=['6144'], simulations=100)\n\n"
+                "\tFor a complete list of parameters, visit the github repo (https://github.com/AlexandrovLab/SigProfilerSimulator) or the documentation page (https://osf.io/usxjz/wiki/home/)"
             )
-            eventProbability(
-                project, input_path, output_path, output_path_original, windowSize, k=10
+            sys.exit()
+        if len(os.listdir(simulation_path)) < 100:
+            print(
+                "Please simulate a minimum of 100 simulations per sample to successfully run SigProfilerClusters."
             )
-            print("done")
+            sys.exit()
 
-    sys.stderr.close()
-    end = time.time() - start
-    print(
-        "SigProfilerClusters successfully finished! Elapsed time: "
-        + str(round(end, 2))
-        + " seconds."
-    )
+        # Collect simulation files and distribute them into the available processors for parallelization
+        simulations = os.listdir(simulation_path)
+        if ".DS_Store" in simulations:
+            simulations.remove(".DS_Store")
+
+        # Assign max_seed as all available or user-provided number of processors for parallelization
+        if max_cpu:
+            processors = max_cpu
+        else:
+            processors = mp.cpu_count()
+        max_seed = processors
+
+        # Calculate the mutational distances for the original samples (distance_one_file())
+        # and for the simulated samples (distance_multiple_files_sims()). These series of if/else
+        # statements were originally used to analyze simulations or original data separately, however,
+        # we always analyze both at consecutively. The only relevant section is now output_type=='all'.
+        # If output_type=='hotspot' or output_type=='subClassify', this portion of code is skipped, which
+        # saves time if the downstream analysis needs to be rerun.
+        if output_type != None:
+            print("Calculating mutational distances...", end="", flush=True)
+        if output_type == "original":
+            distance_one_file(
+                original_samples, output_path_original, file_context2, genome, centromeres
+            )
+
+        elif output_type == "all":
+            # Remove old path iterations if they exist
+            if os.path.exists(output_path):
+                shutil.rmtree(output_path)
+            os.makedirs(output_path)
+
+            # Calculate distances for the original samples
+            # Parallelize and calculate distances for the simulated samples
+            # Organize the output paths (ie remove if they exist, and then create and emtpy folder)
+            if os.path.exists(output_path_original):
+                shutil.rmtree(output_path_original)
+                os.makedirs(output_path_original)
+            else:
+                os.makedirs(output_path_original)
+            original_samples_length = os.listdir(original_samples)
+            if processors > len(original_samples_length):
+                max_seed = len(original_samples_length)
+            pool = mp.Pool(max_seed)
+            # pool_break = len(simulations)/max_seed
+            samples_parallel = [[] for i in range(max_seed)]
+            pool_bin = 0
+            for chromFile in original_samples_length:
+                if pool_bin == max_seed:
+                    pool_bin = 0
+                samples_parallel[pool_bin].append(chromFile)
+                pool_bin += 1
+            results = []
+            for i in range(0, len(samples_parallel), 1):
+                r = pool.apply_async(
+                    distance_one_file,
+                    args=(
+                        samples_parallel[i],
+                        original_samples,
+                        output_path_original,
+                        file_context2,
+                        genome,
+                        centromeres,
+                    ),
+                )
+                results.append(r)
+            pool.close()
+            pool.join()
+            for r in results:
+                r.wait()
+                if not r.successful():
+                    # Raises an error when not successful
+                    r.get()
+
+            # Parallelize and calculate distances for the simulated samples
+            if processors > len(simulations):
+                max_seed = len(simulations)
+            pool = mp.Pool(max_seed)
+            # sim_break = len(simulations)/max_seed
+            simulations_parallel = [[] for i in range(max_seed)]
+            sim_bin = 0
+            for sim in simulations:
+                if sim_bin == max_seed:
+                    sim_bin = 0
+                simulations_parallel[sim_bin].append(sim)
+                sim_bin += 1
+            results = []
+            for i in range(0, len(simulations_parallel), 1):
+                r = pool.apply_async(
+                    distance_multiple_files_sims,
+                    args=(
+                        output_path,
+                        simulations_parallel[i],
+                        simulation_path,
+                        simulation_path_sorted,
+                        file_context2,
+                        genome,
+                        centromeres,
+                        sortSims,
+                    ),
+                )
+                results.append(r)
+            pool.close()
+            pool.join()
+            for r in results:
+                r.wait()
+                if not r.successful():
+                    # Raises an error when not successful
+                    r.get()
+
+        elif output_type == "simulations":
+            if os.path.exists(output_path):
+                shutil.rmtree(output_path)
+            distance_multiple_files_sims(
+                output_path,
+                simulation_path,
+                simulation_path_sorted,
+                file_context2,
+                genome,
+                centromeres,
+                sortSims,
+            )
+        # elif :
+        # 	print("Output type is not a valid option.")
+        # 	sys.exit()
+        if output_type != None:
+            print("Completed!", flush=True)  # IMD calculations have successfully completed.
+
+        # Begin the hotspot analysis. This function will also produce the IMD distribution and spectra plots
+        if analysis == "hotspot" or analysis == "all":
+            original = True
+            firstRun = True
+            signature = False
+            percentage = False
+            regions, imds = hotspot.hotSpotAnalysis(
+                project,
+                genome,
+                contexts,
+                simContext,
+                ref_dir,
+                windowSize,
+                processors,
+                plotIMDfigure,
+                exome,
+                chromLengths,
+                binsDensity,
+                original,
+                signature,
+                percentage,
+                firstRun,
+                clustering_vaf,
+                calculateIMD,
+                chrom_based,
+                correction,
+            )
+
+        # Allows for the clustered muutations to automactically run through the extraction.
+        # This option is not recommended, but rather the extractions should be run separately after
+        # the clustered analysis is completed.
+        # if extraction:
+        # 	print("Beginning signature extraction...")
+        # 	sigs.sigProfilerExtractor("table", ref_dir+"output/extraction_clustered/", ref_dir+"output/vcf_files" + path_suffix + "/"+project+"_clustered/SNV/output/SBS/"+project+"_clustered.SBS96.all", genome, startProcess=startProcess, endProcess=endProcess, totalIterations=totalIterations)#, totalIterations=totalIterations)
+
+        # Subclassify the clustered partition of mutations with the exception of indels. This function will also
+        # produce the rainfall plots.
+        if subClassify:
+            if contexts != "ID":
+                print("Beginning subclassification of clustered mutations...", end="")
+                if includedVAFs:
+                    sys.stderr = open(error_file, "a")
+                    classifyFunctions.pullVaf(
+                        project, input_path, variant_caller, correction
+                    )
+                    sys.stderr.close()
+                    sys.stderr = open(error_file, "a")
+                    classifyFunctions.findClustersOfClusters(
+                        project,
+                        chrom_based,
+                        input_path,
+                        windowSize,
+                        chromLengths,
+                        regions,
+                        log_file,
+                        genome,
+                        processors,
+                        imds,
+                        correction,
+                        includedCCFs,
+                    )
+                    sys.stderr.close()
+                elif includedCCFs:
+                    classifyFunctions.pullCCF(project, input_path, correction)
+                    sys.stderr.close()
+                    sys.stderr = open(error_file, "a")
+                    classifyFunctions.findClustersOfClusters(
+                        project,
+                        chrom_based,
+                        input_path,
+                        windowSize,
+                        chromLengths,
+                        regions,
+                        log_file,
+                        genome,
+                        processors,
+                        imds,
+                        correction,
+                        includedCCFs,
+                    )
+                    sys.stderr.close()
+                else:
+                    classifyFunctions.findClustersOfClusters_noVAF(
+                        project,
+                        chrom_based,
+                        input_path,
+                        windowSize,
+                        chromLengths,
+                        regions,
+                        log_file,
+                        genome,
+                        processors,
+                        imds,
+                        correction,
+                    )
+                    sys.stderr.close()
+                print("Completed!", flush=True)
+            sys.stderr = open(error_file, "a")
+
+            # Generate the rainfall plots.
+            if plotRainfall:
+                print("Generating a rainfall plot for all samples...", end="")
+                plottingFunctions.rainfall(
+                    chrom_based,
+                    project,
+                    input_path,
+                    chrom_path,
+                    chromLengths,
+                    centromeres,
+                    contexts,
+                    includedVAFs,
+                    includedCCFs,
+                    correction,
+                    windowSize,
+                    bedRanges,
+                )
+                print("done")
+                print("Subclassification of clustered mutations has finished!")
+
+            # Generates output paths for final results saved as VCF files
+            convertToVCF.generateAllPaths(input_path, contexts)
+            convertToVCF.convertFiles(input_path, contexts, project, correction)
+
+            # Add probability to all clustered mutations using same window sized-bins
+            if probability:
+                print("\n")
+                print(
+                    "Calculating the probability of observing each clustered event...",
+                    end="",
+                    flush=True,
+                )
+                eventProbability(
+                    project, input_path, output_path, output_path_original, windowSize, k=10
+                )
+                print("done")
+
+        sys.stderr.close()
+        end = time.time() - start
+        print(
+            "SigProfilerClusters successfully finished! Elapsed time: "
+            + str(round(end, 2))
+            + " seconds."
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()

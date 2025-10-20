@@ -2,7 +2,7 @@ import os
 import numpy as np
 import os
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
-from SigProfilerClusters import hotspot
+# from SigProfilerClusters import hotspot
 import shutil
 from numpy import median
 import pickle
@@ -10,6 +10,8 @@ import bisect
 import re
 import multiprocessing as mp
 import sys
+import hotspot
+import copy
 
 
 def processivitySubclassification(event, out2Y, out2K, out2S, out2N):
@@ -554,7 +556,9 @@ def findClustersOfClusters(
     Outputs:
             Subclassification files for all clustered mutations.
     """
-
+    didyma_count = 0
+    kataegis_count = 0
+    omikli_count = 0
     ####################################################################################
     # Organize paths and file names
     ####################################################################################
@@ -658,6 +662,24 @@ def findClustersOfClusters(
         + "_clustered_class2N.txt"
     )
 
+    out_file13 = (
+        project_path
+        + "subclasses"
+        + path_suffix
+        + "/class_didyma/"
+        + project
+        + "_clustered_class_didyma.txt"
+    ) 
+
+    out_file14 = (
+        project_path
+        + "subclasses"
+        + path_suffix
+        + "/class_didyma/"
+        + project
+        + "_clustered_class_true_didyma.txt"
+    )
+
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class1/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class1/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class1/")
@@ -688,6 +710,9 @@ def findClustersOfClusters(
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class2N/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class2N/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class2N/")
+    if os.path.exists(project_path + "subclasses" + path_suffix + "/class_didyma/"):
+        shutil.rmtree(project_path + "subclasses" + path_suffix + "/class_didyma/")
+    os.makedirs(project_path + "subclasses" + path_suffix + "/class_didyma/")
     ####################################################################################
 
     # Hard-coded cutoffs, which can later be used as additional parameters to the tool.
@@ -903,6 +928,30 @@ def findClustersOfClusters(
             ]
         )
 
+        didymaHeader = "\t".join(
+            [
+                x
+                for x in [
+                    "project",
+                    "samples",
+                    "ID",
+                    "genome",
+                    "mutType",
+                    "chr",
+                    "start",
+                    "end",
+                    "ref",
+                    "alt",
+                    "mutClass",
+                    "IMDplot",
+                    "group",
+                    "IMD",
+                    "VAF/CCF",
+                    "strand",
+                ]
+            ]
+        )
+
         with open(out_file) as f, open(out_file2, "w") as out2, open(
             out_file3, "w"
         ) as out3, open(out_file4, "w") as out4, open(out_file5, "w") as out5, open(
@@ -919,7 +968,11 @@ def findClustersOfClusters(
             out_file11, "w"
         ) as out2S, open(
             out_file12, "w"
-        ) as out2N:
+        ) as out2N, open(
+            out_file13, "w"
+        ) as out_didyma, open(
+            out_file14,"w"
+        ) as out_true_didyma:
             print(
                 "\t".join(
                     [
@@ -955,7 +1008,8 @@ def findClustersOfClusters(
             print(subclassesHeader, file=out2K)
             print(subclassesHeader, file=out2S)
             print(subclassesHeader, file=out2N)
-
+            print(didymaHeader, file=out_didyma)
+            print(didymaHeader, file=out_true_didyma)
             next(f)
             for line in f:
                 # line = line.strip().split()[1:]
@@ -973,6 +1027,7 @@ def findClustersOfClusters(
                     writeClassIb = False
                     writeClassIc = False
                     writeClassIa = False
+                    writeClass_didyma = False
 
                     if len(lines) > 0:
                         if lines[-1][0] == "New":
@@ -1127,6 +1182,9 @@ def findClustersOfClusters(
                                     else:
                                         writeClassI = True
                                         writeClassIc = True
+                                    # Class didyma
+                                    writeClass_didyma = True
+                                    
                                 else:
                                     writeClassI = True
                                     if zeroDistances == 0:
@@ -1136,8 +1194,35 @@ def findClustersOfClusters(
                                             writeClassIb = True
                                     else:
                                         writeClassIc = True
+                                        writeClass_didyma = True
                             else:
-                                writeClassIII = True
+                                writeClassIII = True                           
+
+                        if writeClassII or writeClassIc:
+                            didyma_count += 1
+                            didyma_lines = copy.deepcopy(lines)
+
+                            for i in range(0, len(didyma_lines), 1):
+                                if didyma_lines[i][8] == 'C' or didyma_lines[i][8] == 'T':
+                                    didyma_lines[i].append("1")
+                                else:
+                                    didyma_lines[i].append("-1")
+                            pos_strand, neg_strand = [], []
+                            for line in didyma_lines:
+                                (pos_strand if line[-1] == "1" else neg_strand).append(line)
+                            if len(pos_strand) > 1:
+                                for i in range(0, len(pos_strand), 1):
+                                    print("\t".join([x for x in pos_strand[i]]), file=out_didyma)
+                            if len(pos_strand) == 2:
+                                for i in range(0, len(pos_strand), 1):
+                                    print("\t".join([x for x in pos_strand[i]]), file=out_true_didyma)
+                            if len(neg_strand) > 1:
+                                for i in range(0, len(neg_strand), 1):
+                                    print("\t".join([x for x in neg_strand[i]]), file=out_didyma)
+                            if len(neg_strand) == 2:
+                                for i in range(0, len(neg_strand), 1):
+                                    print("\t".join([x for x in neg_strand[i]]), file=out_true_didyma)
+                            
 
                         if writeClassII:
                             processivitySubclassification(
@@ -1487,6 +1572,32 @@ def findClustersOfClusters(
                                     for line in saveNewEvent:
                                         linesSubClass.remove(line)
 
+                                    if writeClassII or writeClassIc:
+                                        didyma_count += 1
+                                        didyma_lines = copy.deepcopy(saveNewEvent)
+
+                                        for i in range(0, len(didyma_lines), 1):
+                                            if didyma_lines[i][8] == 'C' or didyma_lines[i][8] == 'T':
+                                                didyma_lines[i].append("1")
+                                            else:
+                                                didyma_lines[i].append("-1")
+                                        pos_strand, neg_strand = [], []
+                                        for line in didyma_lines:
+                                            (pos_strand if line[-1] == "1" else neg_strand).append(line)
+                                        if len(pos_strand) > 1:
+                                            for i in range(0, len(pos_strand), 1):
+                                                print("\t".join([x for x in pos_strand[i]]), file=out_didyma)
+                                        if len(pos_strand) == 2:
+                                            for i in range(0, len(pos_strand), 1):
+                                                print("\t".join([x for x in pos_strand[i]]), file=out_true_didyma)
+                                        if len(neg_strand) > 1:
+                                            for i in range(0, len(neg_strand), 1):
+                                                print("\t".join([x for x in neg_strand[i]]), file=out_didyma)
+                                        if len(neg_strand) == 2:
+                                            for i in range(0, len(neg_strand), 1):
+                                                print("\t".join([x for x in neg_strand[i]]), file=out_true_didyma)
+
+
                                     if writeClassII:
                                         processivitySubclassification(
                                             saveNewEvent, out2Y, out2K, out2S, out2N
@@ -1632,6 +1743,7 @@ def findClustersOfClusters(
         "class2K",
         "class2S",
         "class2N",
+        "class_didyma"
     ]
     if processors > len(subclasses):
         max_seed = len(subclasses)
@@ -1660,6 +1772,7 @@ def findClustersOfClusters(
         if not r.successful():
             # Raises an error when not successful
             r.get()
+    print(didyma_count)
 
     # try:
     # 	print("Generating matrices for Class 1 mutations:")
@@ -1861,6 +1974,15 @@ def findClustersOfClusters_noVAF(
         + "_clustered_class2N.txt"
     )
 
+    out_file13 = (
+        project_path
+        + "subclasses"
+        + path_suffix
+        + "/class2N/"
+        + project
+        + "_clustered_class_didyma.txt"
+    )
+
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class1/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class1/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class1/")
@@ -1891,6 +2013,9 @@ def findClustersOfClusters_noVAF(
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class2N/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class2N/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class2N/")
+    if os.path.exists(project_path + "subclasses" + path_suffix + "/class_didyma/"):
+        shutil.rmtree(project_path + "subclasses" + path_suffix + "/class_didyma/")
+    os.makedirs(project_path + "subclasses" + path_suffix + "/class_didyma/")
     ####################################################################################
 
     # Hard-coded cutoffs, which can later be used as additional parameters to the tool.
@@ -2127,7 +2252,6 @@ def findClustersOfClusters_noVAF(
             print(subclassesHeader, file=out2K)
             print(subclassesHeader, file=out2S)
             print(subclassesHeader, file=out2N)
-
             for line in f:
                 # line = line.strip().split()[1:]
                 line = line.strip().split()
