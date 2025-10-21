@@ -1213,13 +1213,13 @@ def findClustersOfClusters(
                             if len(pos_strand) > 1:
                                 for i in range(0, len(pos_strand), 1):
                                     print("\t".join([x for x in pos_strand[i]]), file=out_didyma)
-                            if len(pos_strand) == 2:
+                            if len(pos_strand) == 2 and len(didyma_lines) == 2:
                                 for i in range(0, len(pos_strand), 1):
                                     print("\t".join([x for x in pos_strand[i]]), file=out_true_didyma)
                             if len(neg_strand) > 1:
                                 for i in range(0, len(neg_strand), 1):
                                     print("\t".join([x for x in neg_strand[i]]), file=out_didyma)
-                            if len(neg_strand) == 2:
+                            if len(neg_strand) == 2 and len(didyma_lines) == 2:
                                 for i in range(0, len(neg_strand), 1):
                                     print("\t".join([x for x in neg_strand[i]]), file=out_true_didyma)
                             
@@ -1587,13 +1587,13 @@ def findClustersOfClusters(
                                         if len(pos_strand) > 1:
                                             for i in range(0, len(pos_strand), 1):
                                                 print("\t".join([x for x in pos_strand[i]]), file=out_didyma)
-                                        if len(pos_strand) == 2:
+                                        if len(pos_strand) == 2 and len(didyma_lines) == 2:
                                             for i in range(0, len(pos_strand), 1):
                                                 print("\t".join([x for x in pos_strand[i]]), file=out_true_didyma)
                                         if len(neg_strand) > 1:
                                             for i in range(0, len(neg_strand), 1):
                                                 print("\t".join([x for x in neg_strand[i]]), file=out_didyma)
-                                        if len(neg_strand) == 2:
+                                        if len(neg_strand) == 2 and len(didyma_lines) == 2:
                                             for i in range(0, len(neg_strand), 1):
                                                 print("\t".join([x for x in neg_strand[i]]), file=out_true_didyma)
 
