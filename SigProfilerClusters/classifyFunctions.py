@@ -12,6 +12,28 @@ import multiprocessing as mp
 import sys
 import hotspot
 import copy
+import glob
+import pandas as pd
+
+def didymaAPOBEC(path,project,didyma,seqInfo):
+    """
+    Separates didymos to APOBEC didymos
+    """
+
+    if os.path.exists(path + "/APOBEC_didyma/"):
+        shutil.rmtree(path + "/APOBEC_didyma/")
+    os.makedirs(path + "/APOBEC_didyma/")
+    seqInfo_files = glob.glob(path+"/class_true_didyma/output/vcf_files/SNV/*seqinfo.txt")
+    seq = pd.concat((pd.read_csv(f, sep='\t',header = None,names=['samples','start','seqInfo','strand']) for f in seqInfo_files), ignore_index=True)
+    seq.to_csv(path+"/APOBEC_didyma/"+"all_seqInfo.csv",index=None)
+    didyma = pd.read_csv(path + f"/class_true_didyma/{project}_clustered_class_true_didyma.txt" ,sep='\t')
+    didyma_seq = didyma.merge(seq[['start', 'seqInfo']], on='start', how='left')
+    didyma_seq.to_csv(path+"/APOBEC_didyma/"+"didyma_seqInfo.csv",index=None)
+    didyma_seq['context']=didyma_seq['seqInfo'].str[3]+didyma_seq['seqInfo'].str[5]
+    APOBEC_can = didyma_seq[didyma_seq['IMD'] <= 32]
+    APOBEC = APOBEC_can.groupby('group').filter(lambda g: (g['context'] == 'TC').all())
+    APOBEC.to_csv(path+"/APOBEC_didyma/"+"didyma_APOBEC.csv",index=None)
+
 
 
 def processivitySubclassification(event, out2Y, out2K, out2S, out2N):
@@ -1777,6 +1799,9 @@ def findClustersOfClusters(
             # Raises an error when not successful
             r.get()
 
+    didyma_path = project_path + "subclasses" + path_suffix
+    didymaAPOBEC(didyma_path,project,None,None)
+
     # try:
     # 	print("Generating matrices for Class 1 mutations:")
     # 	matrices = matGen.SigProfilerMatrixGeneratorFunc("class1", genome, project_path + 'subclasses'+ path_suffix + '/class1/', seqInfo=True)#, plot=True)
@@ -2814,6 +2839,7 @@ def findClustersOfClusters_noVAF(
         if not r.successful():
             # Raises an error when not successful
             r.get()
+    
 
     # try:
     # 	print("Generating matrices for Class 1 mutations:")
