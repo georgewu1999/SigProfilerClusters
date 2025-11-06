@@ -2020,6 +2020,7 @@ def findClustersOfClusters_noVAF(
         + "_clustered_class_true_didyma.txt"
     )
 
+    
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class1/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class1/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class1/")
@@ -2053,7 +2054,7 @@ def findClustersOfClusters_noVAF(
     if os.path.exists(project_path + "subclasses" + path_suffix + "/class_didyma/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class_didyma/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class_didyma/")
-    if os.path.exists(project_path + "subclasses" + path_suffix + "/class_didyma/"):
+    if os.path.exists(project_path + "subclasses" + path_suffix + "/class_true_didyma/"):
         shutil.rmtree(project_path + "subclasses" + path_suffix + "/class_true_didyma/")
     os.makedirs(project_path + "subclasses" + path_suffix + "/class_true_didyma/")
     ####################################################################################
@@ -2260,7 +2261,6 @@ def findClustersOfClusters_noVAF(
                     "IMDplot",
                     "group",
                     "IMD",
-                    "VAF/CCF",
                     "strand",
                 ]
             ]
@@ -2840,6 +2840,8 @@ def findClustersOfClusters_noVAF(
             # Raises an error when not successful
             r.get()
     
+    didyma_path = project_path + "subclasses" + path_suffix
+    didymaAPOBEC(didyma_path,project,None,None)
 
     # try:
     # 	print("Generating matrices for Class 1 mutations:")

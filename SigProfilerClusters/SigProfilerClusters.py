@@ -6,9 +6,10 @@ from SigProfilerMatrixGenerator.scripts import (
     convert_input_to_simple_files as convertIn,
 )
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
-import hotspot
 # from . import hotspot
 # from . import classifyFunctions
+import hotspot
+import classifyFunctions
 import SigProfilerMatrixGenerator as sig
 import matplotlib as plt
 import sigProfilerPlotting as sigPlt
@@ -20,7 +21,6 @@ import statistics
 import scipy
 import time
 import sys
-import classifyFunctions
 import plottingFunctions
 
 # from SigProfilerExtractor import sigpro as sigs
@@ -1355,6 +1355,7 @@ def analysis(
         # Subclassify the clustered partition of mutations with the exception of indels. This function will also
         # produce the rainfall plots.
         if subClassify:
+            print(input_path)
             if contexts != "ID":
                 print("Beginning subclassification of clustered mutations...", end="")
                 if includedVAFs:
