@@ -19,7 +19,7 @@ import warnings
 from statistics import median
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 import time
-import plottingFunctions
+from . import plottingFunctions
 import pickle
 import bisect
 from scipy.signal import find_peaks

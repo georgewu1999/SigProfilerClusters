@@ -2,7 +2,7 @@ import os
 import numpy as np
 import os
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
-# from SigProfilerClusters import hotspot
+from SigProfilerClusters import hotspot
 import shutil
 from numpy import median
 import pickle
@@ -10,7 +10,6 @@ import bisect
 import re
 import multiprocessing as mp
 import sys
-import hotspot
 import copy
 import glob
 import pandas as pd
@@ -24,15 +23,17 @@ def didymaAPOBEC(path,project,didyma,seqInfo):
         shutil.rmtree(path + "/APOBEC_didyma/")
     os.makedirs(path + "/APOBEC_didyma/")
     seqInfo_files = glob.glob(path+"/class_true_didyma/output/vcf_files/SNV/*seqinfo.txt")
-    seq = pd.concat((pd.read_csv(f, sep='\t',header = None,names=['samples','start','seqInfo','strand']) for f in seqInfo_files), ignore_index=True)
-    seq.to_csv(path+"/APOBEC_didyma/"+"all_seqInfo.csv",index=None)
+    seq = pd.concat((pd.read_csv(f, sep='\t',header = None,names=['samples','chr','start','seqInfo','strand']) for f in seqInfo_files), ignore_index=True)
+    seq.to_csv(path+"/APOBEC_didyma/"+f"{project}all_seqInfo.csv",index=None)
     didyma = pd.read_csv(path + f"/class_true_didyma/{project}_clustered_class_true_didyma.txt" ,sep='\t')
-    didyma_seq = didyma.merge(seq[['start', 'seqInfo']], on='start', how='left')
-    didyma_seq.to_csv(path+"/APOBEC_didyma/"+"didyma_seqInfo.csv",index=None)
+    seq['chr']=seq['chr'].astype('str')
+    didyma['chr']=didyma['chr'].astype('str')
+    didyma_seq = pd.merge(didyma,seq[['samples','chr','start','seqInfo']],on=['samples','chr','start'],how='left')
+    didyma_seq.to_csv(path+"/APOBEC_didyma/"+f"{project}_didyma_seqInfo.csv",index=None)
     didyma_seq['context']=didyma_seq['seqInfo'].str[3]+didyma_seq['seqInfo'].str[5]
     APOBEC_can = didyma_seq[didyma_seq['IMD'] <= 32]
-    APOBEC = APOBEC_can.groupby('group').filter(lambda g: (g['context'] == 'TC').all())
-    APOBEC.to_csv(path+"/APOBEC_didyma/"+"didyma_APOBEC.csv",index=None)
+    APOBEC = APOBEC_can.groupby(['samples','group']).filter(lambda g: (g['context'] == 'TC').all())
+    APOBEC.to_csv(path+"/APOBEC_didyma/"+f"{project}_didyma_APOBEC.csv",index=None)
 
 
 
@@ -1613,12 +1614,16 @@ def findClustersOfClusters(
                                             for i in range(0, len(pos_strand), 1):
                                                 print("\t".join([x for x in pos_strand[i]]), file=out_didyma)
                                         if len(pos_strand) == 2 and len(didyma_lines) == 2:
+                                            pos_strand[0][13] = str(int(pos_strand[1][6])-int(pos_strand[0][6]))
+                                            pos_strand[1][13] = str(int(pos_strand[1][6])-int(pos_strand[0][6]))
                                             for i in range(0, len(pos_strand), 1):
                                                 print("\t".join([x for x in pos_strand[i]]), file=out_true_didyma)
                                         if len(neg_strand) > 1:
                                             for i in range(0, len(neg_strand), 1):
                                                 print("\t".join([x for x in neg_strand[i]]), file=out_didyma)
                                         if len(neg_strand) == 2 and len(didyma_lines) == 2:
+                                            neg_strand[0][13] = str(int(neg_strand[1][6])-int(neg_strand[0][6]))
+                                            neg_strand[1][13] = str(int(neg_strand[1][6])-int(neg_strand[0][6]))
                                             for i in range(0, len(neg_strand), 1):
                                                 print("\t".join([x for x in neg_strand[i]]), file=out_true_didyma)
 

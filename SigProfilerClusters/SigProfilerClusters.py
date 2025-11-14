@@ -6,10 +6,8 @@ from SigProfilerMatrixGenerator.scripts import (
     convert_input_to_simple_files as convertIn,
 )
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
-# from . import hotspot
-# from . import classifyFunctions
-import hotspot
-import classifyFunctions
+from . import hotspot
+from . import classifyFunctions
 import SigProfilerMatrixGenerator as sig
 import matplotlib as plt
 import sigProfilerPlotting as sigPlt
@@ -21,13 +19,12 @@ import statistics
 import scipy
 import time
 import sys
-import plottingFunctions
 
 # from SigProfilerExtractor import sigpro as sigs
 import multiprocessing as mp
-# from . import plottingFunctions
+from . import plottingFunctions
 from SigProfilerMatrixGenerator.scripts import MutationMatrixGenerator as matRef
-# from . import convertToVCF
+from . import convertToVCF
 import random
 import pandas as pd
 import bisect
